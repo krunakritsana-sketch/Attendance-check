@@ -60,7 +60,7 @@ var ST_COLOR = {
  * ตัวอย่าง : api('getDashboard', '2026-08-31').then(res => {...})
  */
 /** URL ของ Apps Script Web App (ลงท้ายด้วย /exec) */
-var API_URL = 'วาง URL /exec ที่นี่';
+var API_URL = 'https://script.google.com/macros/s/AKfycbyZZp4I1X2zT7zWQASYb5pV20IA81LK_xtPQBYBemtyWPZgtGdsicxZvY9rSJdl1fXM/exec';
 
 /**
  * เรียก Backend (Apps Script) ผ่าน fetch แบบ Promise
