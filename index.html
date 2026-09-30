@@ -1,324 +1,138 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<base target="_top">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= appTitle ?></title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: { sarabun: ['Sarabun', 'sans-serif'] },
-        colors: {
-          navy: { 50:'#eef4ff',100:'#dae6ff',500:'#2c5aa0',600:'#1e3a8a',700:'#172d6b',800:'#12224f',900:'#0d1836' }
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance check system</title>
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1bhthn13_6YvO-WOOV3bxRQqXGGwAFG40">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Sarabun Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
         }
-      }
-    }
-  }
-</script>
+        /* Style for the iframe to ensure it covers the full viewport */
+        #mainIframe {
+            width: 100%;
+            height: 100vh;
+            display: block; /* Ensures no extra space around it */
+        }
+    </style>
 
-<style>
-  *{font-family:'Sarabun',sans-serif;}
-  body{background:#f1f5f9;}
-  .tab-btn{transition:all .2s ease;}
-  .tab-btn.active{background:#1e3a8a;color:#fff;box-shadow:0 4px 12px rgba(30,58,138,.35);}
-  .tab-pane{display:none;animation:fade .25s ease;}
-  .tab-pane.active{display:block;}
-  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
-  ::-webkit-scrollbar{height:8px;width:8px;}
-  ::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:8px;}
-  ::-webkit-scrollbar-track{background:#e2e8f0;}
-  .st-btn{transition:all .12s ease;}
-  .st-btn:active{transform:scale(.94);}
-  .no-scrollbar::-webkit-scrollbar{display:none;}
-  .grid31 td,.grid31 th{border:1px solid #cbd5e1;}
-  #printFrame{position:fixed;width:0;height:0;border:0;left:-9999px;}
-  @media print{ body *{visibility:hidden;} }
-</style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // URL of your Google Apps Script web app
+            const web_app_url = 'https://script.google.com/macros/s/AKfycbyZZp4I1X2zT7zWQASYb5pV20IA81LK_xtPQBYBemtyWPZgtGdsicxZvY9rSJdl1fXM/exec';
+            
+            // Function to check for In-App Browser, while excluding Google Chrome
+            function is_InAppBrowser() {
+                const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                const isChrome = /Chrome/.test(userAgent);
+                
+                // Check for common in-app browser user agents, excluding Chrome
+                return (
+                    !isChrome && 
+                    /FBAV|FBAN|LINE|Tiktok|Instagram|Twitter|Snapchat|Telegram|MicroMessenger|Pinterest|Reddit|Threads/i.test(userAgent)
+                );
+            }
+
+            // Get the main iframe element
+            const mainIframe = document.getElementById('mainIframe');
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // If the URL already has the 'openExternalBrowser' parameter, we assume it's opened in a main browser
+            if (urlParams.has('openExternalBrowser')) {
+                mainIframe.src = web_app_url;
+                return;
+            }
+
+            // Check if it's an In-App Browser and if so, show the modal
+            if (is_InAppBrowser()) {
+                const modal = document.getElementById('inAppBrowserModal');
+                const confirmButton = document.getElementById('confirmButton');
+                const copyLinkButton = document.getElementById('copyLinkButton');
+                const copyMessage = document.getElementById('copyMessage');
+
+                const urlToRedirect = new URL(window.location.href);
+                urlToRedirect.searchParams.set('openExternalBrowser', '1');
+
+                // Show the modal and hide the iframe
+                modal.classList.remove('hidden');
+                mainIframe.style.display = 'none';
+                
+                confirmButton.addEventListener('click', () => {
+                    window.location.href = urlToRedirect.toString();
+                });
+
+                copyLinkButton.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(urlToRedirect.toString());
+                        copyMessage.textContent = 'คัดลอกแล้ว!';
+                        copyMessage.classList.remove('hidden');
+                        setTimeout(() => {
+                            copyMessage.classList.add('hidden');
+                        }, 2000);
+                    } catch (err) {
+                        copyMessage.textContent = 'ไม่สามารถคัดลอกได้!';
+                        copyMessage.classList.remove('hidden');
+                        console.error('Failed to copy text: ', err);
+                    }
+                });
+            } else {
+                // If it's not an In-App Browser, load the Apps Script URL directly into the iframe
+                mainIframe.src = web_app_url;
+            }
+        });
+    </script>
 </head>
-
-<body class="font-sarabun text-slate-800">
-
-<!-- ============ HEADER ============ -->
-<header class="bg-gradient-to-r from-navy-900 via-navy-600 to-navy-500 text-white shadow-lg sticky top-0 z-40">
-  <div class="max-w-7xl mx-auto px-3 py-3 sm:px-6 sm:py-4">
-    <div class="flex items-center gap-3">
-      <div class="bg-white/15 backdrop-blur rounded-xl p-2 shrink-0">
-        <svg class="w-7 h-7 sm:w-9 sm:h-9" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-      </div>
-      <div class="min-w-0">
-        <h1 class="text-base sm:text-xl font-bold leading-tight truncate">ระบบเช็คชื่อหน้าแถว</h1>
-        <p class="text-[11px] sm:text-sm text-blue-100 truncate">โรงเรียนสารบรรณ กรมสารบรรณทหารเรือ</p>
-      </div>
-      <div class="ml-auto text-right hidden sm:block">
-        <p class="text-[11px] text-blue-100">วันที่ปัจจุบัน</p>
-        <p id="hdToday" class="text-sm font-semibold">-</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ TAB MENU ============ -->
-  <nav class="bg-navy-800/60 backdrop-blur border-t border-white/10">
-    <div class="max-w-7xl mx-auto px-2">
-      <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-2">
-        <button data-tab="dashboard"  class="tab-btn active whitespace-nowrap px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-blue-100 hover:bg-white/10">📊 ภาพรวม</button>
-        <button data-tab="attendance" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-blue-100 hover:bg-white/10">📝 บันทึกเข้าแถว</button>
-        <button data-tab="daily"      class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-blue-100 hover:bg-white/10">📅 สรุปรายวัน</button>
-        <button data-tab="range"      class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-blue-100 hover:bg-white/10">👥 สรุปชุด/กลุ่ม</button>
-        <button data-tab="monthly"    class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-blue-100 hover:bg-white/10">🗓️ สรุปรายเดือน</button>
-        <button data-tab="individual" class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-blue-100 hover:bg-white/10">🧑 สรุปรายบุคคล</button>
-        <button data-tab="admin"      class="tab-btn whitespace-nowrap px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-blue-100 hover:bg-white/10">⚙️ จัดการนักเรียน</button>
-      </div>
-    </div>
-  </nav>
-</header>
-
-<main class="max-w-7xl mx-auto p-3 sm:p-6">
-
-<!-- ==================== TAB 1 : DASHBOARD ==================== -->
-<section id="tab-dashboard" class="tab-pane active">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-    <div class="flex flex-wrap items-end gap-3">
-      <div class="flex-1 min-w-[160px]">
-        <label class="block text-xs font-semibold text-slate-500 mb-1">เลือกวันที่</label>
-        <input type="date" id="dashDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-navy-500 outline-none">
-      </div>
-      <button onclick="loadDashboard()" class="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow">🔍 ดูข้อมูล</button>
-      <button onclick="forceRefreshDashboard()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow">🔄 รีเฟรชล่าสุด</button>
-    </div>
-  </div>
-
-  <div id="dashCards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4"></div>
-  <div id="dashStatus" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4"></div>
-
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-    <div class="px-4 py-3 bg-slate-50 border-b flex items-center justify-between">
-      <h2 class="font-bold text-navy-700 text-sm sm:text-base">📋 สรุปแยกตามชุด/กลุ่มเรียน</h2>
-      <span id="dashCacheTag" class="text-[11px] text-slate-400"></span>
-    </div>
-    <div class="overflow-x-auto"><div id="dashTable"></div></div>
-  </div>
-</section>
-
-<!-- ==================== TAB 2 : ATTENDANCE ==================== -->
-<section id="tab-attendance" class="tab-pane">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-    <div class="grid sm:grid-cols-3 gap-3">
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">วันที่เข้าแถว</label>
-        <input type="date" id="atdDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-navy-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ชุด/กลุ่มเรียน</label>
-        <select id="atdClass" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-navy-500"></select>
-      </div>
-      <div class="flex items-end">
-        <button onclick="loadAttendanceList()" class="w-full bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow">📥 ดึงรายชื่อนักเรียน</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="atdPanel" class="hidden">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-
-        <span class="text-xs font-semibold text-slate-500 mr-1">ตั้งค่าเร็ว :</span>
-
-        <button type="button" data-setall="มา"       class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold">✅ มาทั้งหมด</button>
-
-        <button type="button" data-setall="ขาดแถว"   class="px-3 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold">❌ ขาดทั้งหมด</button>
-
-        <button type="button" data-setall="สาย"      class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold">⏰ สายทั้งหมด</button>
-
-        <button type="button" data-setall="ลากิจ"    class="px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-xs font-semibold">📄 ลาทั้งหมด</button>
-
-        <button type="button" data-setall=""         class="px-3 py-1.5 rounded-lg bg-slate-400 hover:bg-slate-500 text-white text-xs font-semibold">🧹 ล้างทั้งหมด</button>
-
-        <div class="ml-auto text-xs text-slate-500">เช็คแล้ว <span id="atdProgress" class="font-bold text-navy-700">0/0</span></div>
-
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">📚 เนื้อหา/กิจกรรมการอบรมประจำวัน</label>
-        <textarea id="atdContent" rows="2" placeholder="ระบุเนื้อหา กิจกรรม หรือคำสั่งประจำวัน..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-navy-500"></textarea>
-      </div>
-    </div>
-
-    <div id="atdSavedBadge" class="hidden mb-3 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-sm font-semibold">
-      ⚠️ ชุดนี้มีการบันทึกข้อมูลของวันดังกล่าวไว้แล้ว — การบันทึกใหม่จะเขียนทับข้อมูลเดิม
-    </div>
-
-    <div id="atdList" class="space-y-2"></div>
-
-    <div class="sticky bottom-0 mt-4 bg-white/95 backdrop-blur border border-slate-200 rounded-2xl p-3 shadow-lg">
-      <button onclick="confirmSaveAttendance()" class="w-full bg-gradient-to-r from-navy-700 to-navy-500 hover:from-navy-800 hover:to-navy-600 text-white py-3 rounded-xl font-bold shadow-md">
-        💾 บันทึกข้อมูลการเข้าแถว
-      </button>
-    </div>
-  </div>
-
-  <div id="atdEmpty" class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-slate-400 text-sm">
-    เลือกวันที่และชุด/กลุ่มเรียน แล้วกด "ดึงรายชื่อนักเรียน"
-  </div>
-</section>
-
-<!-- ==================== TAB 3 : DAILY SUMMARY ==================== -->
-<section id="tab-daily" class="tab-pane">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-    <div class="grid sm:grid-cols-4 gap-3">
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">วันที่</label>
-        <input type="date" id="dailyDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ชุด/กลุ่มเรียน</label>
-        <select id="dailyClass" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-      </div>
-      <div class="flex items-end"><button onclick="loadDailySummary()" class="w-full bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">🔍 แสดงผล</button></div>
-      <div class="flex items-end gap-2">
-        <button onclick="printReport('dailyPrint','สรุปการเข้าแถวรายวัน')" class="flex-1 bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-semibold">🖨️ พิมพ์</button>
-        <button onclick="exportDailyCSV()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">⬇️ CSV</button>
-      </div>
-    </div>
-  </div>
-  <div id="dailyPrint"></div>
-</section>
-
-<!-- ==================== TAB 4 : CLASS RANGE ==================== -->
-<section id="tab-range" class="tab-pane">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-    <div class="grid sm:grid-cols-5 gap-3">
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ชุด/กลุ่มเรียน</label>
-        <select id="rangeClass" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ตั้งแต่วันที่</label>
-        <input type="date" id="rangeStart" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ถึงวันที่</label>
-        <input type="date" id="rangeEnd" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-      </div>
-      <div class="flex items-end"><button onclick="loadRangeSummary()" class="w-full bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">🔍 แสดงผล</button></div>
-      <div class="flex items-end gap-2">
-        <button onclick="printReport('rangePrint','สรุปการเข้าแถวตามช่วงวันที่')" class="flex-1 bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-semibold">🖨️</button>
-        <button onclick="exportRangeCSV()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">⬇️ CSV</button>
-      </div>
-    </div>
-  </div>
-  <div id="rangePrint"></div>
-</section>
-
-<!-- ==================== TAB 5 : MONTHLY GRID ==================== -->
-<section id="tab-monthly" class="tab-pane">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-    <div class="grid sm:grid-cols-5 gap-3">
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ชุด/กลุ่มเรียน</label>
-        <select id="monClass" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">เดือน</label>
-        <select id="monMonth" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ปี (ค.ศ.)</label>
-        <select id="monYear" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-      </div>
-      <div class="flex items-end"><button onclick="loadMonthly()" class="w-full bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">🔍 แสดงผล</button></div>
-      <div class="flex items-end gap-2">
-        <button onclick="printReport('monPrint','สรุปการเข้าแถวรายเดือน')" class="flex-1 bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-semibold">🖨️</button>
-        <button onclick="exportMonthlyCSV()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">⬇️ CSV</button>
-      </div>
-    </div>
-  </div>
-  <div id="monPrint"></div>
-</section>
-
-<!-- ==================== TAB 6 : INDIVIDUAL ==================== -->
-<section id="tab-individual" class="tab-pane">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-    <div class="grid sm:grid-cols-6 gap-3">
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ชุด/กลุ่มเรียน</label>
-        <select id="indClass" onchange="reloadStudentOptions()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-      </div>
-      <div class="sm:col-span-2">
-        <label class="block text-xs font-semibold text-slate-500 mb-1">นักเรียน</label>
-        <select id="indStudent" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ตั้งแต่</label>
-        <input type="date" id="indStart" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">ถึง</label>
-        <input type="date" id="indEnd" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-      </div>
-      <div class="flex items-end"><button onclick="loadIndividual()" class="w-full bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">🔍 แสดงผล</button></div>
-    </div>
-    <div class="flex gap-2 mt-3">
-      <button onclick="printReport('indPrint','สรุปการเข้าแถวรายบุคคล')" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold">🖨️ พิมพ์สรุป</button>
-      <button onclick="exportIndividualCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">⬇️ ดาวน์โหลด CSV</button>
-    </div>
-  </div>
-  <div id="indPrint"></div>
-</section>
-
-<!-- ==================== TAB 7 : ADMIN ==================== -->
-<section id="tab-admin" class="tab-pane">
-  <div id="adminLoginBox" class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
-    <div class="w-16 h-16 mx-auto bg-navy-50 rounded-full flex items-center justify-center mb-4">
-      <svg class="w-8 h-8 text-navy-600" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-      </svg>
-    </div>
-    <h2 class="text-lg font-bold text-navy-700 mb-1">เขตพื้นที่ผู้ดูแลระบบ</h2>
-    <p class="text-sm text-slate-500 mb-5">กรุณาเข้าสู่ระบบเพื่อจัดการข้อมูลนักเรียน</p>
-    <button onclick="adminLogin()" class="w-full bg-navy-600 hover:bg-navy-700 text-white py-2.5 rounded-lg font-semibold">🔑 เข้าสู่ระบบผู้ดูแล</button>
-  </div>
-
-  <div id="adminPanel" class="hidden">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-4">
-      <div class="flex flex-wrap items-end gap-3">
-        <div class="flex-1 min-w-[150px]">
-          <label class="block text-xs font-semibold text-slate-500 mb-1">ค้นหา (รหัส/ชื่อ)</label>
-          <input type="text" id="admSearch" oninput="renderAdminTable()" placeholder="พิมพ์เพื่อค้นหา..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+<body>
+    <!-- Modal for In-App Browser warning -->
+    <div id="inAppBrowserModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-none sm:rounded-lg shadow-none sm:shadow-xl w-full h-full sm:max-w-sm sm:h-auto p-6 flex flex-col justify-between text-center">
+            <div>
+                <div class="flex flex-col items-center justify-center mb-6">
+                    <!-- Heart icon from Font Awesome -->
+                    <i class="fa-solid fa-heart text-red-500 text-5xl mb-4"></i>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">เปิดในเบราว์เซอร์หลัก</h2>
+                <p class="text-gray-600 mb-6 text-sm">เพื่อประสิทธิภาพสูงสุดในการใช้งาน กรุณาเปิดหน้าเว็บนี้ในเบราว์เซอร์หลัก (เช่น Chrome, Safari) ค่ะ</p>
+                
+                <div class="text-left text-sm text-gray-700 mt-4 space-y-2">
+                    <p><b>คำแนะนำ:</b></p>
+                    <p>• หากเปิดลิงก์นี้ด้วย Facebook และแอปพลิเคชันอื่นๆ: กรุณากดปุ่ม "คัดลอกลิงก์" เพื่อนำไปวางบนเบราว์เซอร์หลัก</p>
+                    <p>• หากเปิดผ่าน LINE: กดปุ่ม "เปิดเบราว์เซอร์" ได้เลยค่ะ</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-center mt-auto">
+                <div class="flex justify-center space-x-4 mb-4">
+                    <button id="confirmButton" class="px-6 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition-colors duration-200">
+                        เปิดเบราว์เซอร์
+                    </button>
+                    <button id="copyLinkButton" class="px-6 py-2 rounded-lg text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 transition-colors duration-200">
+                        คัดลอกลิงก์
+                    </button>
+                </div>
+                <span id="copyMessage" class="text-green-600 text-sm font-medium hidden">คัดลอกแล้ว!</span>
+            </div>
         </div>
-        <div class="min-w-[150px]">
-          <label class="block text-xs font-semibold text-slate-500 mb-1">กรองชุด/กลุ่ม</label>
-          <select id="admFilter" onchange="renderAdminTable()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
-        </div>
-        <button onclick="openStudentForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">➕ เพิ่มนักเรียน</button>
-        <button onclick="loadAdminStudents()" class="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">🔄 รีเฟรช</button>
-        <button onclick="adminLogout()" class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">🚪 ออก</button>
-      </div>
     </div>
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="overflow-x-auto"><div id="admTable"></div></div>
-    </div>
-  </div>
-</section>
 
-</main>
-
-<footer class="text-center text-xs text-slate-400 py-6">
-  © <span id="ftYear"></span> โรงเรียนสารบรรณ กรมสารบรรณทหารเรือ — Deverloped : @KRITSANA
-</footer>
-
-<iframe id="printFrame"></iframe>
-
-<script src="script.js"></script>
-<script src="script1.js"></script>
-<script src="script2.js"></script>
-
+    <!-- The iframe where the main content will be displayed -->
+    <iframe id="mainIframe" scrolling="yes" src="https://script.google.com/macros/s/AKfycbyZZp4I1X2zT7zWQASYb5pV20IA81LK_xtPQBYBemtyWPZgtGdsicxZvY9rSJdl1fXM/exec" frameborder="0"></iframe>
 </body>
 </html>
+
